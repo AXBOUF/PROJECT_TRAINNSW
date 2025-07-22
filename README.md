@@ -37,5 +37,8 @@ It’s a **lightweight, custom-built dashboard**, not a full-feature trip planne
 
 ---
 
-## 📐 Rough Architecture
+## 📐 Rough Architectur
+
+- Gotta register for the open data api( it is free for personal purpose )
+- After then we will try some solution architect best practices to continue
 
