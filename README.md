@@ -32,7 +32,7 @@ It’s a **lightweight, custom-built dashboard**, not a full-feature trip planne
 | Backend     | Fetches and parses GTFS Realtime feeds          |
 | Frontend    | Displays filtered routes & next train info      |
 | Cloud       | AWS hosting, caching, microservices (later)     |
-| Personalization | Set favorite routes, view live status            |
+| Personalization | Set favorite routes, view live status       |
 | Voice UI    | (Optional) Ask: "When’s the next train to X?"   |
 
 ---
