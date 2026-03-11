@@ -1,3 +1,0 @@
-This project is very essential for internship opportunities that will require perferct planning and launching. 
-This along with another vide project that will eventually make things better and we will be needing to scrap alog of notion planner pages and habit tracker.
-Eventually we are making a ETL pipeline that will help a user track there progress and timeline. 
