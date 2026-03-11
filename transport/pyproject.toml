@@ -1,0 +1,16 @@
+[project]
+name = "transport"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "google>=3.0.0",
+    "ipykernel>=7.2.0",
+    "jupyter>=1.1.1",
+    "load-dotenv>=0.1.0",
+    "numpy>=2.4.3",
+    "pandas>=3.0.1",
+    "requests>=2.32.5",
+    "seaborn>=0.13.2",
+]
