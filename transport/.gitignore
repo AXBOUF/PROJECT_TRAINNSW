@@ -1,0 +1,13 @@
+API_KEY
+gtfs_data/
+.venv/
+.vscode/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite
+*.log
+
+.env 
