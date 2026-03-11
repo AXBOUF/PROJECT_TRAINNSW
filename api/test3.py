@@ -7,23 +7,20 @@ from datetime import datetime
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
+url = "https://api.transport.nsw.gov.au/v1/gtfs/realtime/"
 
-# GTFS-Realtime endpoints (choose one)
-ENDPOINTS = {
-    "bus_positions": "https://api.transport.nsw.gov.au/v1/gtfs/vehiclepos/buses",
-    "train_positions": "https://api.transport.nsw.gov.au/v1/gtfs/vehiclepos/sydneytrains",
-    "ferry_positions": "https://api.transport.nsw.gov.au/v1/gtfs/vehiclepos/ferries",
-    "bus_updates": "https://api.transport.nsw.gov.au/v1/gtfs/realtime/buses",
-    "train_updates": "https://api.transport.nsw.gov.au/v1/gtfs/realtime/sydneytrains",
-    "bus_alerts": "https://api.transport.nsw.gov.au/v1/gtfs/alerts/buses",
-}
+'''
+Operations: to choose from https://opendata.transport.nsw.gov.au/data/dataset/public-transport-realtime-trip-update/resource/d936a1c6-1fe6-4985-9df2-326e91036f80
+GET /sydneytrains - Note - this feed has been superseded by version 2
+GET /buses
+GET /ferries/
+GET /lightrail/
+GET /lightrail/innerwest - Note - this feed has been superseded by version 2
+GET /nswtrains
+GET /regionbuses/
+GET /metro - Note - this feed has been superseded by version 2
+'''
 
-# Select which feed to fetch
-selected = "bus_positions"
-url = ENDPOINTS[selected]
-
-print(f"Fetching: {selected}")
-print(f"URL: {url}\n")
 
 response = requests.get(url, headers={"Authorization": f"apikey {API_KEY}"})
 
