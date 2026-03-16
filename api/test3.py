@@ -12,13 +12,6 @@ url = "https://api.transport.nsw.gov.au/v1/gtfs/realtime/"
 '''
 Operations: to choose from https://opendata.transport.nsw.gov.au/data/dataset/public-transport-realtime-trip-update/resource/d936a1c6-1fe6-4985-9df2-326e91036f80
 GET /sydneytrains - Note - this feed has been superseded by version 2
-GET /buses
-GET /ferries/
-GET /lightrail/
-GET /lightrail/innerwest - Note - this feed has been superseded by version 2
-GET /nswtrains
-GET /regionbuses/
-GET /metro - Note - this feed has been superseded by version 2
 '''
 
 
