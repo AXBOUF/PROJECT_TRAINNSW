@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NSW Train Simulator</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --text: #e8edf5;
+    --muted: #5a7090;
+    --train: #00d4ff;
+    --stop: #ff6b35;
+    --route: rgba(0, 212, 255, 0.6);
+  }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+    color: var(--accent);
+  }
+
+  .logo span { color: var(--text); }
+
+  .badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(0,212,255,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,212,255,0.25);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    margin-left: auto;
+    transition: background 0.3s;
+  }
+  .status-dot.active { background: #00ff88; box-shadow: 0 0 8px #00ff88; animation: pulse 1.5s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .status-label { font-size: 11px; color: var(--muted); }
+
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .section {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a7090' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+  select:focus { border-color: var(--accent); }
+  select:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .speed-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .speed-val {
+    font-size: 12px;
+    color: var(--accent);
+    min-width: 28px;
+    text-align: right;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #33ddff; }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-secondary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* TELEMETRY */
+  .telem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .telem-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+  }
+
+  .telem-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .telem-val { font-size: 18px; color: var(--accent); font-family: 'Syne', sans-serif; font-weight: 700; }
+  .telem-unit { font-size: 10px; color: var(--muted); }
+
+  /* STOP LOG */
+  .stop-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  .log-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    opacity: 0.4;
+    transition: opacity 0.3s;
+    font-size: 12px;
+  }
+
+  .log-entry.visited { opacity: 1; }
+  .log-entry.current { opacity: 1; color: var(--accent); }
+
+  .log-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    margin-top: 4px;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .log-entry.visited .log-dot { background: var(--stop); }
+  .log-entry.current .log-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+
+  .log-stop-name { flex: 1; line-height: 1.4; }
+  .log-time { color: var(--muted); font-size: 10px; white-space: nowrap; }
+
+  /* MAP */
+  #map {
+    flex: 1;
+    background: #0a0e1a;
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.5s linear;
+  }
+
+  /* TRAIN MARKER */
+  .train-icon {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 3px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    box-shadow: 0 0 12px var(--accent);
+    animation: trainPulse 1s infinite;
+  }
+  @keyframes trainPulse { 0%,100%{box-shadow:0 0 8px var(--train)} 50%{box-shadow:0 0 20px var(--train)} }
+
+  /* Leaflet dark theme overrides */
+  .leaflet-tile { filter: brightness(0.7) saturate(0.5) hue-rotate(180deg) invert(1); }
+  .leaflet-container { background: var(--bg); }
+  .leaflet-popup-content-wrapper {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .leaflet-popup-tip { background: var(--surface); }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NSW<span>Rail</span></div>
+  <div class="badge">SIMULATION</div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+    <div class="status-label" id="status-label">IDLE</div>
+    <div class="status-dot" id="status-dot"></div>
+  </div>
+</header>
+
+<div class="progress-bar-wrap">
+  <div class="progress-bar-fill" id="progress-bar"></div>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+
+    <div class="section">
+      <div class="section-label">Route Config</div>
+
+      <div class="field">
+        <label>FROM STOP</label>
+        <select id="from-stop">
+          <option value="">— select departure —</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>TO STOP</label>
+        <select id="to-stop" disabled>
+          <option value="">— select arrival —</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>SIMULATION SPEED</label>
+        <div class="speed-row">
+          <input type="range" id="speed" min="1" max="10" value="3">
+          <span class="speed-val" id="speed-val">3x</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" id="btn-start" disabled>START</button>
+        <button class="btn-secondary" id="btn-pause" disabled>PAUSE</button>
+        <button class="btn-secondary" id="btn-reset" disabled>RESET</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">Telemetry</div>
+      <div class="telem-grid">
+        <div class="telem-card">
+          <div class="telem-label">Stop</div>
+          <div class="telem-val" id="t-stop">—</div>
+        </div>
+        <div class="telem-card">
+          <div class="telem-label">Remaining</div>
+          <div class="telem-val" id="t-remaining">—</div>
+        </div>
+        <div class="telem-card">
+          <div class="telem-label">Lat</div>
+          <div class="telem-val" id="t-lat" style="font-size:13px">—</div>
+        </div>
+        <div class="telem-card">
+          <div class="telem-label">Lon</div>
+          <div class="telem-val" id="t-lon" style="font-size:13px">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label" style="padding:16px 20px 8px">Stop Sequence</div>
+    <div class="stop-log" id="stop-log">
+      <div class="empty-state">Select stops above<br>to see the route sequence</div>
+    </div>
+
+  </div>
+
+  <div id="map"></div>
+</div>
+
+<script>
+// ─── SAMPLE TRAIN STOPS (NSW stations) ────────────────────────────────────────
+// In your real project, load this from your stops dataframe via Python/FastAPI
+// These are real coordinates for Sydney Trains T1/T2/T3 line stations
+
+const TRAIN_STOPS = [
+  { id: "2000001", name: "Central",           lat: -33.8835, lon: 151.2063 },
+  { id: "2000002", name: "Redfern",           lat: -33.8920, lon: 151.2000 },
+  { id: "2000003", name: "Macdonaldtown",     lat: -33.9010, lon: 151.1923 },
+  { id: "2000004", name: "Newtown",           lat: -33.8985, lon: 151.1793 },
+  { id: "2000005", name: "Stanmore",          lat: -33.8940, lon: 151.1657 },
+  { id: "2000006", name: "Petersham",         lat: -33.8968, lon: 151.1570 },
+  { id: "2000007", name: "Lewisham",          lat: -33.8948, lon: 151.1481 },
+  { id: "2000008", name: "Summer Hill",       lat: -33.8900, lon: 151.1384 },
+  { id: "2000009", name: "Ashfield",          lat: -33.8870, lon: 151.1244 },
+  { id: "2000010", name: "Croydon",           lat: -33.8826, lon: 151.1127 },
+  { id: "2000011", name: "Burwood",           lat: -33.8775, lon: 151.1038 },
+  { id: "2000012", name: "Strathfield",       lat: -33.8737, lon: 151.0921 },
+  { id: "2000013", name: "North Strathfield", lat: -33.8643, lon: 151.0895 },
+  { id: "2000014", name: "Concord West",      lat: -33.8572, lon: 151.0893 },
+  { id: "2000015", name: "Rhodes",            lat: -33.8318, lon: 151.0893 },
+  { id: "2000016", name: "Meadowbank",        lat: -33.8180, lon: 151.0932 },
+  { id: "2000017", name: "West Ryde",         lat: -33.8072, lon: 151.0870 },
+  { id: "2000018", name: "Ryde",              lat: -33.8160, lon: 151.1010 },
+  { id: "2000019", name: "Shepparton Hills",  lat: -33.7950, lon: 151.0815 },
+  { id: "2000020", name: "Epping",            lat: -33.7726, lon: 151.0817 },
+  { id: "2000021", name: "Cheltenham",        lat: -33.7612, lon: 151.0670 },
+  { id: "2000022", name: "Beecroft",          lat: -33.7503, lon: 151.0617 },
+  { id: "2000023", name: "Pennant Hills",     lat: -33.7385, lon: 151.0700 },
+  { id: "2000024", name: "Thornleigh",        lat: -33.7245, lon: 151.0837 },
+  { id: "2000025", name: "Normanhurst",       lat: -33.7143, lon: 151.0920 },
+  { id: "2000026", name: "Hornsby",           lat: -33.7034, lon: 151.0993 },
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let map, trainMarker, routeLine;
+let simInterval = null;
+let currentStopIndex = 0;
+let routeStops = [];
+let isPaused = false;
+let simStartTime = null;
+
+// ─── MAP INIT ─────────────────────────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', { zoomControl: true }).setView([-33.87, 151.10], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+}
+
+// ─── POPULATE SELECTS ─────────────────────────────────────────────────────────
+function populateSelects() {
+  const from = document.getElementById('from-stop');
+  const to   = document.getElementById('to-stop');
+
+  TRAIN_STOPS.forEach(s => {
+    from.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+    to.innerHTML   += `<option value="${s.id}">${s.name}</option>`;
+  });
+
+  from.addEventListener('change', () => {
+    const hasFrom = from.value !== '';
+    to.disabled = !hasFrom;
+    document.getElementById('btn-start').disabled = true;
+    to.value = '';
+  });
+
+  to.addEventListener('change', () => {
+    const valid = from.value !== '' && to.value !== '' && from.value !== to.value;
+    document.getElementById('btn-start').disabled = !valid;
+    if (valid) buildRoutePreview();
+  });
+}
+
+// ─── BUILD ROUTE PREVIEW ──────────────────────────────────────────────────────
+function buildRoutePreview() {
+  const fromId = document.getElementById('from-stop').value;
+  const toId   = document.getElementById('to-stop').value;
+
+  const fromIdx = TRAIN_STOPS.findIndex(s => s.id === fromId);
+  const toIdx   = TRAIN_STOPS.findIndex(s => s.id === toId);
+
+  if (fromIdx === -1 || toIdx === -1) return;
+
+  // Build sequence (forward or reverse)
+  if (fromIdx < toIdx) {
+    routeStops = TRAIN_STOPS.slice(fromIdx, toIdx + 1);
+  } else {
+    routeStops = TRAIN_STOPS.slice(toIdx, fromIdx + 1).reverse();
+  }
+
+  // Draw preview line on map
+  clearMap();
+  drawRouteLine(routeStops, 'rgba(0,212,255,0.25)');
+  drawStopMarkers(routeStops);
+  buildStopLog(routeStops);
+
+  // Fit map to route
+  const bounds = routeStops.map(s => [s.lat, s.lon]);
+  map.fitBounds(bounds, { padding: [40, 40] });
+}
+
+// ─── DRAW HELPERS ─────────────────────────────────────────────────────────────
+function clearMap() {
+  if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+  if (trainMarker) { map.removeLayer(trainMarker); trainMarker = null; }
+  map.eachLayer(l => { if (l instanceof L.CircleMarker) map.removeLayer(l); });
+}
+
+function drawRouteLine(stops, color) {
+  const coords = stops.map(s => [s.lat, s.lon]);
+  routeLine = L.polyline(coords, { color: color || '#00d4ff', weight: 3, opacity: 0.8 }).addTo(map);
+}
+
+function drawStopMarkers(stops) {
+  stops.forEach((s, i) => {
+    const isEnd = i === 0 || i === stops.length - 1;
+    L.circleMarker([s.lat, s.lon], {
+      radius: isEnd ? 8 : 5,
+      color: isEnd ? '#ff6b35' : '#00d4ff',
+      fillColor: isEnd ? '#ff6b35' : '#0a0e1a',
+      fillOpacity: isEnd ? 1 : 0.8,
+      weight: 2
+    }).bindPopup(`<b>${s.name}</b><br><span style="color:#5a7090;font-size:11px">${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}</span>`).addTo(map);
+  });
+}
+
+function buildStopLog(stops) {
+  const log = document.getElementById('stop-log');
+  log.innerHTML = stops.map((s, i) => `
+    <div class="log-entry" id="log-${i}">
+      <div class="log-dot"></div>
+      <div class="log-stop-name">${s.name}</div>
+      <div class="log-time" id="log-time-${i}">—</div>
+    </div>
+  `).join('');
+}
+
+// ─── TRAIN MARKER ─────────────────────────────────────────────────────────────
+function createTrainMarker(lat, lon) {
+  const icon = L.divIcon({
+    className: '',
+    html: `<div class="train-icon">🚆</div>`,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+  return L.marker([lat, lon], { icon, zIndexOffset: 1000 }).addTo(map);
+}
+
+// ─── SIMULATION ───────────────────────────────────────────────────────────────
+function startSim() {
+  if (routeStops.length < 2) return;
+
+  currentStopIndex = 0;
+  isPaused = false;
+  simStartTime = Date.now();
+
+  clearMap();
+  drawRouteLine(routeStops, '#00d4ff');
+  drawStopMarkers(routeStops);
+  buildStopLog(routeStops);
+
+  trainMarker = createTrainMarker(routeStops[0].lat, routeStops[0].lon);
+
+  setStatus('active', 'RUNNING');
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-pause').disabled = false;
+  document.getElementById('btn-reset').disabled = false;
+  document.getElementById('from-stop').disabled = true;
+  document.getElementById('to-stop').disabled = true;
+
+  updateTelemetry(routeStops[0], 0);
+  tick();
+}
+
+function tick() {
+  if (isPaused) return;
+
+  const speed = parseInt(document.getElementById('speed').value);
+  const interval = Math.max(400, 2000 / speed);
+
+  simInterval = setTimeout(() => {
+    if (isPaused) return;
+
+    currentStopIndex++;
+
+    if (currentStopIndex >= routeStops.length) {
+      arriveAtDestination();
+      return;
+    }
+
+    const stop = routeStops[currentStopIndex];
+
+    // Move train marker
+    trainMarker.setLatLng([stop.lat, stop.lon]);
+    map.panTo([stop.lat, stop.lon], { animate: true, duration: 0.5 });
+
+    // Update UI
+    updateTelemetry(stop, currentStopIndex);
+    updateProgress(currentStopIndex);
+    updateLog(currentStopIndex);
+
+    tick();
+  }, interval);
+}
+
+function updateTelemetry(stop, idx) {
+  document.getElementById('t-stop').textContent = idx + 1;
+  document.getElementById('t-remaining').textContent = routeStops.length - idx - 1;
+  document.getElementById('t-lat').textContent = stop.lat.toFixed(4);
+  document.getElementById('t-lon').textContent = stop.lon.toFixed(4);
+}
+
+function updateProgress(idx) {
+  const pct = (idx / (routeStops.length - 1)) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function updateLog(idx) {
+  // Mark previous as visited
+  if (idx > 0) {
+    const prev = document.getElementById(`log-${idx - 1}`);
+    if (prev) { prev.classList.remove('current'); prev.classList.add('visited'); }
+    const prevTime = document.getElementById(`log-time-${idx - 1}`);
+    if (prevTime) {
+      const elapsed = Math.round((Date.now() - simStartTime) / 1000);
+      prevTime.textContent = `+${elapsed}s`;
+    }
+  }
+  // Mark current
+  const curr = document.getElementById(`log-${idx}`);
+  if (curr) {
+    curr.classList.add('current');
+    curr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function arriveAtDestination() {
+  setStatus('', 'ARRIVED');
+  document.getElementById('status-dot').style.background = '#00ff88';
+  document.getElementById('status-dot').style.boxShadow = '0 0 8px #00ff88';
+  document.getElementById('btn-pause').disabled = true;
+  document.getElementById('progress-bar').style.width = '100%';
+
+  // Mark last stop
+  const last = document.getElementById(`log-${routeStops.length - 1}`);
+  if (last) { last.classList.add('visited'); last.classList.remove('current'); }
+
+  // Zoom to destination
+  const dest = routeStops[routeStops.length - 1];
+  map.setView([dest.lat, dest.lon], 14, { animate: true });
+}
+
+function pauseSim() {
+  if (!isPaused) {
+    isPaused = true;
+    clearTimeout(simInterval);
+    setStatus('', 'PAUSED');
+    document.getElementById('btn-pause').textContent = 'RESUME';
+  } else {
+    isPaused = false;
+    setStatus('active', 'RUNNING');
+    document.getElementById('btn-pause').textContent = 'PAUSE';
+    tick();
+  }
+}
+
+function resetSim() {
+  clearTimeout(simInterval);
+  simInterval = null;
+  isPaused = false;
+  currentStopIndex = 0;
+  routeStops = [];
+
+  clearMap();
+  setStatus('', 'IDLE');
+
+  document.getElementById('from-stop').disabled = false;
+  document.getElementById('from-stop').value = '';
+  document.getElementById('to-stop').disabled = true;
+  document.getElementById('to-stop').value = '';
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-pause').disabled = true;
+  document.getElementById('btn-reset').disabled = true;
+  document.getElementById('btn-pause').textContent = 'PAUSE';
+  document.getElementById('progress-bar').style.width = '0%';
+
+  document.getElementById('t-stop').textContent = '—';
+  document.getElementById('t-remaining').textContent = '—';
+  document.getElementById('t-lat').textContent = '—';
+  document.getElementById('t-lon').textContent = '—';
+
+  document.getElementById('stop-log').innerHTML =
+    '<div class="empty-state">Select stops above<br>to see the route sequence</div>';
+
+  map.setView([-33.87, 151.10], 11);
+}
+
+function setStatus(cls, label) {
+  const dot = document.getElementById('status-dot');
+  const lbl = document.getElementById('status-label');
+  dot.className = 'status-dot' + (cls ? ' ' + cls : '');
+  lbl.textContent = label;
+}
+
+// ─── WIRE UP ──────────────────────────────────────────────────────────────────
+document.getElementById('speed').addEventListener('input', e => {
+  document.getElementById('speed-val').textContent = e.target.value + 'x';
+});
+document.getElementById('btn-start').addEventListener('click', startSim);
+document.getElementById('btn-pause').addEventListener('click', pauseSim);
+document.getElementById('btn-reset').addEventListener('click', resetSim);
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+initMap();
+populateSelects();
+</script>
+</body>
+</html>
