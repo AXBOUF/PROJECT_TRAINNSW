@@ -1,0 +1,56 @@
+.
+├── api
+│   ├── nsw_trains.py
+│   ├── test2.py
+│   ├── test3.py
+│   ├── test4.py
+│   ├── test5.py
+│   ├── test_all_endpoints.py
+│   ├── test.py
+│   └── train_routes.py
+├── getrealtime_8.0.yaml
+├── gtfs_data
+│   ├── agency.txt
+│   ├── calendar_dates.txt
+│   ├── calendar.txt
+│   ├── levels.txt
+│   ├── notes.txt
+│   ├── pathways.txt
+│   ├── routes.txt
+│   ├── shapes.txt
+│   ├── stops.txt
+│   ├── stop_times.txt
+│   └── trips.txt
+├── main.py
+├── notebooks
+│   ├── map.py
+│   ├── stops.ipynb
+│   ├── sydneytrains.json
+│   ├── test.ipynb
+│   ├── train_simulator.html
+│   ├── train_stops.html
+│   └── train_stops.json
+├── notes
+│   ├── about.md
+│   ├── getting_started.md
+│   ├── gtfs_file_relationship.jpg
+│   ├── gtfs.md
+│   └── README.md
+├── nsw_trains_realtime.csv
+├── pra
+│   └── api
+│       ├── application.py
+│       ├── __pycache__
+│       │   └── application.cpython-311.pyc
+│       ├── temp.txt
+│       └── test_api.py
+├── pyproject.toml
+├── requirement
+│   └── ver1.md
+├── RESEARCH.MD
+├── sample.json
+├── temp.txt
+├── uv.lock
+└── version1
+
+10 directories, 44 files

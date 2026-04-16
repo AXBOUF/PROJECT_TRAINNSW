@@ -1,0 +1,54 @@
+{
+  "id": "92-C.2005.103.32.A.8.90178548",
+  "tripUpdate": {
+    "trip": {
+      "tripId": "92-C.2005.103.32.A.8.90178548",
+      "scheduleRelationship": "SCHEDULED",
+      "routeId": "IWL_2b"
+    },
+    "stopTimeUpdate": [
+      {
+        "arrival": {
+          "delay": 19
+        },
+        "departure": {
+          "delay": 44
+        },
+        "stopId": "204261",
+        "scheduleRelationship": "SCHEDULED"
+      },
+      {
+        "arrival": {
+          "delay": 44
+        },
+        "departure": {
+          "delay": 44
+        },
+        "stopId": "2015121",
+        "scheduleRelationship": "SCHEDULED"
+      },
+      {
+        "arrival": {
+          "delay": 44
+        },
+        "departure": {
+          "delay": 44
+        },
+        "stopId": "2015135",
+        "scheduleRelationship": "SCHEDULED"
+      },
+      {
+        "arrival": {
+          "delay": 44
+        },
+        "departure": {
+          "delay": 14
+        },
+        "stopId": "2000337",
+        "scheduleRelationship": "SCHEDULED"
+      }
+    ],
+    "vehicle": {},
+    "timestamp": "1776293539"
+  }
+}
