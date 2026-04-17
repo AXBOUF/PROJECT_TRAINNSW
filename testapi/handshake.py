@@ -7,7 +7,7 @@ import os
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 
-url = "https://api.transport.nsw.gov.au/v2/gtfs/vehiclepos/metro"
+url = "https://api.transport.nsw.gov.au/v2/gtfs/vehiclepos/sydneytrains"
 
 headers = {
     "Authorization": f"apikey {API_KEY}"
